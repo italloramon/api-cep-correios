@@ -12,6 +12,7 @@ import com.italloramon.apicepcorreios.repository.SetupRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,8 @@ public class CorreiosService {
     private final AddressRepository addressRepository;
     private final AddressStatusRepository addressStatusRepository;
     private final SetupRepository setupRepository;
+    @Value("${setup.on.startup}")
+    private boolean setupOnStartup;
     public Status getStatus() {
         return addressStatusRepository.findById(AddressStatus.DEFAULT_ID)
                 .orElse(AddressStatus.builder().status(Status.NEED_SETUP).build())
@@ -48,6 +51,10 @@ public class CorreiosService {
 
     @EventListener(ApplicationStartedEvent.class)
     protected void setupOnStartup() {
+        if (!setupOnStartup) {
+            return;
+        }
+
         try {
             setup();
         } catch (Exception ex) {
